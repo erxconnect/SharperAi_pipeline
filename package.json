@@ -1,0 +1,19 @@
+{
+  "name": "sharperai-pipeline",
+  "version": "1.0.0",
+  "description": "AI-powered sports betting pick pipeline using Claude + Supabase",
+  "main": "src/index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/index.js",
+    "fetch": "node src/fetchOdds.js",
+    "update-results": "node src/updateResults.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.54.0",
+    "@supabase/supabase-js": "^2.50.0",
+    "axios": "^1.9.0",
+    "dotenv": "^16.5.0",
+    "node-cron": "^3.0.3"
+  }
+}
