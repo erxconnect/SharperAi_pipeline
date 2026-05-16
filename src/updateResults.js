@@ -2,10 +2,24 @@ require('dotenv').config({ path: require('path').join(__dirname, '..', '.env'), 
 const axios = require('axios');
 const { createClient } = require('@supabase/supabase-js');
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_KEY
-);
+let supabase = null;
+
+function getSupabase() {
+  if (!supabase) {
+    const url = process.env.SUPABASE_URL;
+    const key = process.env.SUPABASE_KEY;
+
+    if (!url || !key) {
+      throw new Error(
+        `Missing Supabase env vars. ` +
+        `SUPABASE_URL: ${url ? 'SET' : 'MISSING'}, ` +
+        `SUPABASE_KEY: ${key ? 'SET' : 'MISSING'}`
+      );
+    }
+    supabase = createClient(url, key);
+  }
+  return supabase;
+}
 
 const ODDS_API_KEY = process.env.ODDS_API_KEY;
 const BASE_URL = 'https://api.the-odds-api.com/v4/sports';
@@ -26,7 +40,7 @@ async function updateResults() {
   const now = new Date().toISOString();
 
   // Fetch all pending picks with game_time in the past
-  const { data: pendingPicks, error: fetchError } = await supabase
+  const { data: pendingPicks, error: fetchError } = await getSupabase()
     .from('picks')
     .select('*')
     .eq('result', 'pending')
@@ -85,7 +99,7 @@ async function updateResults() {
       scoreMap[teams[0]] > scoreMap[teams[1]] ? teams[0] : teams[1];
     const result = winner === pick.pick ? 'win' : 'loss';
 
-    const { error: updateError } = await supabase
+    const { error: updateError } = await getSupabase()
       .from('picks')
       .update({ result })
       .eq('id', pick.id);

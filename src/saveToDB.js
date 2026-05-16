@@ -1,10 +1,24 @@
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env'), override: true });
 const { createClient } = require('@supabase/supabase-js');
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_KEY
-);
+let supabase = null;
+
+function getSupabase() {
+  if (!supabase) {
+    const url = process.env.SUPABASE_URL;
+    const key = process.env.SUPABASE_KEY;
+
+    if (!url || !key) {
+      throw new Error(
+        `Missing Supabase env vars. ` +
+        `SUPABASE_URL: ${url ? 'SET' : 'MISSING'}, ` +
+        `SUPABASE_KEY: ${key ? 'SET' : 'MISSING'}`
+      );
+    }
+    supabase = createClient(url, key);
+  }
+  return supabase;
+}
 
 async function savePick(pickData) {
   // Skip picks with no edge
@@ -16,7 +30,7 @@ async function savePick(pickData) {
   }
 
   // Duplicate check: same home_team + away_team + game_time
-  const { data: existing, error: checkError } = await supabase
+  const { data: existing, error: checkError } = await getSupabase()
     .from('picks')
     .select('id')
     .eq('home_team', pickData.home_team)
@@ -35,7 +49,7 @@ async function savePick(pickData) {
     return existing;
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('picks')
     .insert([{
       sport: pickData.sport,
