@@ -148,4 +148,82 @@ if (require.main === module) {
     .catch((err) => console.error('[fetchOdds] Fatal:', err.message));
 }
 
-module.exports = { fetchAllOdds };
+// ─── Player Props ──────────────────────────────────────────────────────────────
+
+const PROPS_MARKETS = {
+  baseball_mlb:           ['batter_hits', 'batter_home_runs', 'pitcher_strikeouts', 'batter_rbis'],
+  basketball_nba:         ['player_points', 'player_rebounds', 'player_assists', 'player_threes'],
+  americanfootball_nfl:   ['player_pass_tds', 'player_rush_yds', 'player_reception_yds'],
+  mma_mixed_martial_arts: ['fighter_win_method'],
+};
+
+async function fetchPlayerProps(sport) {
+  if (!ODDS_API_KEY) {
+    console.error('[fetchOdds] ODDS_API_KEY not set');
+    return [];
+  }
+
+  const markets = PROPS_MARKETS[sport];
+  if (!markets) {
+    console.log(`[fetchOdds] No props markets defined for ${sport}`);
+    return [];
+  }
+
+  // 1. Get upcoming games for this sport
+  let games = [];
+  try {
+    const gamesRes = await fetchWithRetry(`${BASE_URL}/${sport}/odds`, {
+      apiKey: ODDS_API_KEY,
+      regions: 'us',
+      markets: 'h2h',
+      oddsFormat: 'american',
+    });
+    games = gamesRes.data.filter((g) => isWithinWindow(g.commence_time));
+    console.log(`[fetchOdds] Props: ${games.length} upcoming ${sport} games`);
+  } catch (err) {
+    const status = err.response?.status;
+    if (status === 422) {
+      console.log(`[fetchOdds] ${sport} not in season — props skipped`);
+    } else {
+      console.warn(`[fetchOdds] Props games fetch failed for ${sport}: ${err.message}`);
+    }
+    return [];
+  }
+
+  // 2. Fetch props for top 5 games only (save API credits)
+  const topGames = games.slice(0, 5);
+  const results = [];
+
+  for (const game of topGames) {
+    try {
+      const propsRes = await fetchWithRetry(
+        `${BASE_URL}/${sport}/events/${game.id}/odds`,
+        {
+          apiKey: ODDS_API_KEY,
+          regions: 'us',
+          markets: markets.join(','),
+          oddsFormat: 'american',
+          bookmakers: 'draftkings,fanduel',
+        }
+      );
+
+      if (propsRes.data?.bookmakers?.length > 0) {
+        results.push({
+          game_id: game.id,
+          home_team: game.home_team,
+          away_team: game.away_team,
+          commence_time: game.commence_time,
+          sport,
+          props: propsRes.data.bookmakers,
+        });
+        console.log(`[fetchOdds] Props fetched: ${game.away_team} @ ${game.home_team}`);
+      }
+    } catch (err) {
+      console.warn(`[fetchOdds] Props fetch error (${game.away_team} @ ${game.home_team}): ${err.message}`);
+    }
+  }
+
+  return results;
+}
+
+module.exports = { fetchAllOdds, fetchPlayerProps };

@@ -86,4 +86,50 @@ async function savePick(pickData) {
   return data;
 }
 
-module.exports = { savePick };
+async function saveProps(propData) {
+  // Duplicate check: same player + prop_type + game_id
+  const { data: existing } = await getSupabase()
+    .from('player_props')
+    .select('id')
+    .eq('game_id', propData.game_id)
+    .eq('player_name', propData.player_name)
+    .eq('prop_type', propData.prop_type)
+    .maybeSingle();
+
+  if (existing) {
+    console.log(`[saveToDB] Skipping duplicate prop: ${propData.player_name} ${propData.prop_type}`);
+    return existing;
+  }
+
+  const { data, error } = await getSupabase()
+    .from('player_props')
+    .insert([{
+      game_id:        propData.game_id,
+      sport:          propData.sport,
+      home_team:      propData.home_team,
+      away_team:      propData.away_team,
+      player_name:    propData.player_name,
+      prop_type:      propData.prop_type,
+      line:           propData.line ?? null,
+      over_odds:      propData.over_odds ?? null,
+      under_odds:     propData.under_odds ?? null,
+      best_book:      propData.best_book ?? null,
+      ai_pick:        propData.ai_pick,
+      ai_confidence:  propData.ai_confidence,
+      ai_reason:      propData.ai_reason ?? null,
+      edge:           propData.edge ?? null,
+      recommendation: propData.recommendation,
+      game_time:      propData.game_time,
+    }])
+    .select()
+    .single();
+
+  if (error) {
+    throw new Error(`[saveToDB] Props insert failed: ${error.message}`);
+  }
+
+  console.log(`[saveToDB] Prop saved: ${data.player_name} ${data.prop_type} ${data.ai_pick} ${data.line} [${data.recommendation}]`);
+  return data;
+}
+
+module.exports = { savePick, saveProps };
