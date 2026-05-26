@@ -30,6 +30,14 @@ Respond ONLY in valid JSON, no extra text:
   "recommendation": "STRONG"
 }
 
+For FIFA World Cup matches, consider:
+- Home advantage for host nations (USA, Mexico, Canada)
+- Historical World Cup performance and tournament experience
+- Group stage dynamics (must-win vs dead rubber matches)
+- Travel between venues and climate differences between cities
+- Squad depth for tournament football (rotation, fatigue)
+- Manager tournament experience and tactical setup
+
 Rules:
 - home_probability + away_probability must equal 100 (integers)
 - home_probability = your estimated chance the HOME team wins

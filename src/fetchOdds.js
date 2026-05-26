@@ -6,12 +6,13 @@ const BASE_URL = 'https://api.the-odds-api.com/v4/sports';
 
 // Per-sport region mapping — US sports don't need UK region, saves credits
 const SPORTS = [
-  { key: 'baseball_mlb',              label: 'MLB',  regions: 'us' },
-  { key: 'basketball_nba',            label: 'NBA',  regions: 'us' },
-  { key: 'americanfootball_nfl',      label: 'NFL',  regions: 'us' },
-  { key: 'soccer_epl',                label: 'EPL',  regions: 'uk' },
-  { key: 'soccer_usa_mls',            label: 'MLS',  regions: 'us' },
-  { key: 'mma_mixed_martial_arts',    label: 'MMA',  regions: 'us' },
+  { key: 'baseball_mlb',              label: 'MLB',       regions: 'us' },
+  { key: 'basketball_nba',            label: 'NBA',       regions: 'us' },
+  { key: 'americanfootball_nfl',      label: 'NFL',       regions: 'us' },
+  { key: 'soccer_epl',                label: 'EPL',       regions: 'uk' },
+  { key: 'soccer_usa_mls',            label: 'MLS',       regions: 'us' },
+  { key: 'mma_mixed_martial_arts',    label: 'MMA',       regions: 'us' },
+  { key: 'soccer_fifa_world_cup',     label: 'World Cup', regions: 'us,uk' },
 ];
 
 const TARGET_BOOKS = ['draftkings', 'fanduel', 'betmgm', 'caesars', 'bet365', 'pointsbet'];
